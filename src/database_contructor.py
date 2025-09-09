@@ -15,7 +15,7 @@ def create_full_database(default_path = 'data/db/full_database.csv', objs_path =
         for file in files:
             file_path = os.path.join(root, file)
             vertices, faces, triangles, quads = count_vertices_and_faces(file_path)
-            shapes.append([shape_class, vertices, faces, triangles, quads])
+            shapes.append([file, shape_class, vertices, faces, triangles, quads])
 
         # shapes.sort(key=lambda x: x[0]) # keep alphabetical order?
 
@@ -33,7 +33,7 @@ def create_reduced_database(nr_shapes = 200, default_path = 'data/db/reduced_dat
         for file in files:
             file_path = os.path.join(root, file)
             vertices, faces, triangles, quads = count_vertices_and_faces(file_path)
-            shapes[shape_class].append([shape_class, vertices, faces, triangles, quads])
+            shapes[shape_class].append([file, shape_class, vertices, faces, triangles, quads])
     
     total_available = sum(len(l) for l in shapes.values())
     nr_classes = len(shapes)
@@ -74,16 +74,16 @@ def add_model(file_path, db_path = 'data/db/full_database.csv'):
     if not os.path.exists(db_path):
         with open(db_path, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
-            writer.writerow(["Shape class", "Nr vertices", "Nr faces", "Nr triangles", "Nr quads"])
+            writer.writerow(["Name", "Shape class", "Nr vertices", "Nr faces", "Nr triangles", "Nr quads"])
 
     with open(db_path, mode="a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerow([shape_class, vertices, faces, triangles, quads])
+        writer.writerow([os.path.basename(file_path), shape_class, vertices, faces, triangles, quads])
 
 def write_rows(default_path, shapes):
     with open(default_path, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerow(["Shape class", "Nr vertices", "Nr faces", "Nr triangles", "Nr quads"])
+        writer.writerow(["Name", "Shape class", "Nr vertices", "Nr faces", "Nr triangles", "Nr quads"])
         writer.writerows(shapes)
 
     print(f"New CSV file created at: {default_path}")

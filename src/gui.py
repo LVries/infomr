@@ -1,49 +1,74 @@
 import sys
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QVBoxLayout, QWidget, QLabel, QSizePolicy
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QComboBox, QVBoxLayout, QWidget,
+    QLabel, QSizePolicy, QPushButton, QStackedWidget, QHBoxLayout, QFormLayout
+)
 from MeshViewer import MeshViewer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
 
 class MainWindow(QMainWindow):
     def __init__(self, data_dir="./data/shape-database"):
         super().__init__()
-        self.setWindowTitle("Mesh Viewer")
+        self.setWindowTitle("Mesh Viewer App")
         self.data_dir = data_dir
 
-        layout = QVBoxLayout()
+        # --- Stacked widget for multiple screens ---
+        self.stacked = QStackedWidget()
+        self.setCentralWidget(self.stacked)
 
-        # Folder dropdown
+        # --- Page 1: Main Menu ---
+        self.menu_page = QWidget()
+        menu_layout = QVBoxLayout()
+
+        # Dropdowns in form layout
+        form_layout = QFormLayout()
         self.folder_combo = QComboBox()
         self.folder_combo.addItems(sorted(os.listdir(self.data_dir)))
         self.folder_combo.currentTextChanged.connect(self.update_files)
-        layout.addWidget(QLabel("Select Shape Folder:"))
-        layout.addWidget(self.folder_combo)
+        form_layout.addRow("Select Shape Folder:", self.folder_combo)
 
-        # File dropdown
         self.file_combo = QComboBox()
-        layout.addWidget(QLabel("Select OBJ File:"))
-        layout.addWidget(self.file_combo)
+        form_layout.addRow("Select OBJ File:", self.file_combo)
 
-        # VTK render widget
+        menu_layout.addLayout(form_layout)
+
+        # Buttons (Select + placeholder for future)
+        button_row = QHBoxLayout()
+        self.select_button = QPushButton("Open Mesh Viewer")
+        self.select_button.clicked.connect(self.open_mesh_viewer)
+        button_row.addWidget(self.select_button)
+        menu_layout.addLayout(button_row)
+
+        self.menu_page.setLayout(menu_layout)
+        self.stacked.addWidget(self.menu_page)
+
+        # --- Page 2: Mesh Viewer ---
+        self.viewer_page = QWidget()
+        viewer_layout = QVBoxLayout()
+
+        # VTK widget
         self.vtk_widget = QVTKRenderWindowInteractor()
         self.vtk_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        layout.addWidget(self.vtk_widget, stretch=1)
+        viewer_layout.addWidget(self.vtk_widget, stretch=1)
 
-        # Detect resize events to keep the mesh centered
-        self.vtk_widget.resizeEvent = self.on_vtk_resize
+        # Back button
+        self.back_button = QPushButton("Back to Menu")
+        self.back_button.clicked.connect(self.go_back_to_menu)
+        viewer_layout.addWidget(self.back_button)
 
-        central_widget = QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        self.viewer_page.setLayout(viewer_layout)
+        self.stacked.addWidget(self.viewer_page)
 
-        # Mesh viewer
-        self.viewer = MeshViewer(self.vtk_widget)
+        # MeshViewer will be created later when needed
+        self.viewer = None
 
-        # Initialize file list and render first mesh safely
+        # Initialize file list
         self.update_files(self.folder_combo.currentText())
 
-        # Render mesh only when OBJ file changes
-        self.file_combo.currentTextChanged.connect(self.display_selected_mesh)
+        # Start with menu page
+        self.stacked.setCurrentWidget(self.menu_page)
 
     def update_files(self, folder_name):
         folder_path = os.path.join(self.data_dir, folder_name)
@@ -54,28 +79,36 @@ class MainWindow(QMainWindow):
         self.file_combo.addItems(sorted(obj_files))
         self.file_combo.blockSignals(False)
 
-        # Safely select and render first file, if available
-        if obj_files:
-            first_file = sorted(obj_files)[0]
-            self.file_combo.setCurrentText(first_file)  # triggers rendering via currentTextChanged
-
-    def display_selected_mesh(self, file_name):
+    def open_mesh_viewer(self):
+        file_name = self.file_combo.currentText()
         if not file_name:
             return
         folder_name = self.folder_combo.currentText()
         file_path = os.path.join(self.data_dir, folder_name, file_name)
+
+        if self.viewer is None:
+            self.viewer = MeshViewer(self.vtk_widget)
+
         self.viewer.display_mesh(file_path)
+        self.vtk_widget.resizeEvent = self.on_vtk_resize
+
+        self.stacked.setCurrentWidget(self.viewer_page)
+
+        self.viewer.plotter.interactor.Initialize()
+        self.viewer.plotter.interactor.Start()
+
+    def go_back_to_menu(self):
+        self.stacked.setCurrentWidget(self.menu_page)
 
     def on_vtk_resize(self, event):
-        """Keep the mesh centered when resizing the VTK widget."""
-        self.viewer.plotter.render()
+        if self.viewer:
+            self.viewer.plotter.render()
         super(QVTKRenderWindowInteractor, self.vtk_widget).resizeEvent(event)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.resize(1000, 700)
+    window.resize(1000, 600)
     window.show()
-    window.viewer.plotter.interactor.Initialize()
-    window.viewer.plotter.interactor.Start()
     sys.exit(app.exec())

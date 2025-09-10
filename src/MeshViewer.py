@@ -25,8 +25,8 @@ class MeshViewer:
             # Use a timer to ensure the widget has a valid size
             QTimer.singleShot(50, self._reset_camera)
             self.camera_initialized = True
-        self.plotter.render()
-
+        self.plotter.show()
+    
     def _reset_camera(self):
         self.plotter.reset_camera()
-        self.plotter.render()
+        self.plotter.show()

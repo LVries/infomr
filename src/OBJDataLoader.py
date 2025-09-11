@@ -28,10 +28,10 @@ class OBJDataloader:
         return self.faces
     
     def get_vertices_for_face(self):
-        verticesForFace = []
+        vertices_for_face = []
         for face in self.faces:
-            faceVertices = [self.vertices[idx] for idx in face]
-            verticesForFace.append(faceVertices)
-        return verticesForFace
+            face_vertices = [self.vertices[idx] for idx in face]
+            vertices_for_face.append(face_vertices)
+        return vertices_for_face
     
         

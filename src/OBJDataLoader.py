@@ -1,15 +1,15 @@
 class OBJDataloader:
-    filePath: str
+    file_path: str
     vertices: list
     faces: list
     
-    def __init__(self, filePath):
-        self.filePath = filePath
+    def __init__(self, file_path):
+        self.file_path = file_path
 
     def load(self):
         vertices = []
         faces = []
-        with open(self.filePath, 'r') as file:
+        with open(self.file_path, 'r') as file:
             for line in file:
                 if line.startswith('v '):
                     parts = line.strip().split()
@@ -22,12 +22,12 @@ class OBJDataloader:
         self.vertices = vertices
         self.faces = faces
 
-    def getVertices(self):
+    def get_vertices(self):
         return self.vertices
-    def getFaces(self):
+    def get_faces(self):
         return self.faces
     
-    def getVerticesForFace(self):
+    def get_vertices_for_face(self):
         verticesForFace = []
         for face in self.faces:
             faceVertices = [self.vertices[idx] for idx in face]

@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QComboBox, QVBoxLayout, QWidget,
-    QLabel, QSizePolicy, QPushButton, QStackedWidget, QHBoxLayout, QFormLayout
+    QSizePolicy, QPushButton, QStackedWidget, QHBoxLayout, QFormLayout
 )
 from MeshViewer import MeshViewer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -57,6 +57,11 @@ class MainWindow(QMainWindow):
         self.back_button = QPushButton("Back to Menu")
         self.back_button.clicked.connect(self.go_back_to_menu)
         viewer_layout.addWidget(self.back_button)
+        
+        self.toggle_lines_button = QPushButton("Toggle Mesh Lines")
+        self.toggle_lines_button.clicked.connect(self.show_lines)
+        viewer_layout.addWidget(self.toggle_lines_button)
+
 
         self.viewer_page.setLayout(viewer_layout)
         self.stacked.addWidget(self.viewer_page)
@@ -69,6 +74,16 @@ class MainWindow(QMainWindow):
 
         # Start with menu page
         self.stacked.setCurrentWidget(self.menu_page)
+
+    def show_lines(self):
+        if self.viewer:
+            current_text = self.toggle_lines_button.text()
+            if current_text == "Show Mesh Lines":
+                self.viewer.show_lines(True)
+                self.toggle_lines_button.setText("Hide Mesh Lines")
+            else:
+                self.viewer.show_lines(False)
+                self.toggle_lines_button.setText("Show Mesh Lines")
 
     def update_files(self, folder_name):
         folder_path = os.path.join(self.data_dir, folder_name)

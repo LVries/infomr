@@ -30,3 +30,11 @@ class MeshViewer:
     def _reset_camera(self):
         self.plotter.reset_camera()
         self.plotter.show()
+
+    def show_lines(self, show=True):
+        if self.mesh:
+            if show:
+                self.mesh.linewidth(CELL_EDGE_WIDTH)
+            else:
+                self.mesh.linewidth(0)
+            self.plotter.render()
